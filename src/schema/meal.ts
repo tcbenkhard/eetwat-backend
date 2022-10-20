@@ -1,6 +1,6 @@
 import S from 'jsonschema-definer';
 
-const MealSchema = S.shape({
+export const MealSchema = S.shape({
     id: S.string(),
     name: S.string(),
     durationInMinutes: S.number(),

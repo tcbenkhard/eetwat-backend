@@ -36,6 +36,14 @@ export class EetwatBackendStack extends cdk.Stack {
     })
     mealsTable.grantReadData(listMealsHandler);
 
+    const createMealsHandler = new lambda.NodejsFunction(this,  `${props.serviceName}-${props.environment}-create-meal`, {
+      handler: 'handler',
+      entry: 'src/create-meal-handler.ts',
+      functionName: `${props.serviceName}-${props.environment}-create-meal`,
+      environment
+    })
+    mealsTable.grantReadWriteData(createMealsHandler);
+
     const gateway = new api.RestApi(this, `${props.serviceName}-${props.environment}`, {
       restApiName: `${props.serviceName}-${props.environment}`,
       defaultCorsPreflightOptions: {
@@ -45,6 +53,7 @@ export class EetwatBackendStack extends cdk.Stack {
 
     const gatewayMeals = gateway.root.addResource('meals');
     gatewayMeals.addMethod('GET', new LambdaIntegration(listMealsHandler));
+    gatewayMeals.addMethod('POST', new LambdaIntegration(createMealsHandler));
 
     new aws_ssm.StringParameter(this, `/${props.serviceName}/${props.environment}/hostname`, {
       parameterName: `/${props.serviceName}/${props.environment}/hostname`,

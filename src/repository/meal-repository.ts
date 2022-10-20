@@ -1,16 +1,14 @@
-import * as AWS from 'aws-sdk';
 import {getEnv} from "../util/get-env";
 import {Meal} from "../schema/meal";
+import {dynamo} from '../util/aws';
 
-const db = new AWS.DynamoDB.DocumentClient({region: 'eu-west-1'});
-
-export const mealRepository = {
-    findAll: async (): Promise<Meal[]> => {
+export class MealRepository {
+    async findAll(): Promise<Meal[]> {
         const meals = [];
         let exclusiveStartKey = undefined;
         do {
             // @ts-ignore
-            const result = await db.scan({
+            const result = await dynamo.scan({
                 TableName: getEnv('MEALS_TABLE_NAME'),
                 ExclusiveStartKey: exclusiveStartKey
             }).promise();
@@ -19,5 +17,12 @@ export const mealRepository = {
         } while(exclusiveStartKey);
 
         return meals;
+    };
+
+    async save(meal: Meal): Promise<void> {
+        await dynamo.put({
+            TableName: getEnv('MEALS_TABLE_NAME'),
+            Item: meal
+        }).promise();
     }
 }
