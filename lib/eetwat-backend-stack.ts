@@ -5,6 +5,7 @@ import * as api from 'aws-cdk-lib/aws-apigateway';
 import {LambdaIntegration} from 'aws-cdk-lib/aws-apigateway';
 import * as dynamo from 'aws-cdk-lib/aws-dynamodb';
 import {AttributeType} from 'aws-cdk-lib/aws-dynamodb';
+import {UserPool} from 'aws-cdk-lib/aws-cognito';
 import {aws_ssm} from "aws-cdk-lib";
 
 interface EetwatBackendProps extends cdk.StackProps {
@@ -59,5 +60,26 @@ export class EetwatBackendStack extends cdk.Stack {
       parameterName: `/${props.serviceName}/${props.environment}/hostname`,
       stringValue: gateway.url
     });
+
+    const userPool = new UserPool(this, 'UserPool', {
+      autoVerify: {
+        email: true
+      },
+      userPoolName: `${props.serviceName}-${props.environment}`,
+      passwordPolicy: {
+        minLength: 8,
+        requireDigits: false,
+        requireUppercase: false,
+        requireLowercase: false,
+        requireSymbols: false,
+      }
+    });
+
+    userPool.addClient(`${props.serviceName}-${props.environment}-frontend`, {
+      authFlows: {
+        userPassword: true
+      },
+      userPoolClientName: `${props.serviceName}-${props.environment}-frontend`,
+    })
   }
 }
